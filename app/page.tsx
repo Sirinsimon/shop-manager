@@ -242,8 +242,12 @@ export default function Home() {
               onAddProduct={() => {
                 setEditingProduct(null)
                 setShowProductForm(true)
+                setActiveTab('products')
               }}
-              onAddSale={() => setShowSalesForm(true)}
+              onAddSale={() => {
+                setShowSalesForm(true)
+                setActiveTab('sales')
+              }}
               lowStockProducts={lowStockProducts}
             />
           </TabsContent>
