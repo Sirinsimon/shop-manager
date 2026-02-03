@@ -1,4 +1,7 @@
-// In-memory data store for products and sales
+import fs from 'fs'
+import path from 'path'
+
+// In-memory data store for products and sales with file persistence
 export interface Product {
   id: string
   name: string
@@ -20,17 +23,71 @@ export interface Sale {
   notes: string
 }
 
+interface StoreData {
+  products: Record<string, Product>
+  sales: Record<string, Sale>
+}
+
 class DataStore {
   private products: Map<string, Product> = new Map()
   private sales: Map<string, Sale> = new Map()
-  private productCounter = 0
-  private saleCounter = 0
+  private dataFile: string
+  private initialized = false
+
+  constructor() {
+    // Store data in the project root
+    this.dataFile = path.join(process.cwd(), 'shop-data.json')
+    this.loadFromFile()
+  }
+
+  private loadFromFile(): void {
+    try {
+      if (fs.existsSync(this.dataFile)) {
+        const data = fs.readFileSync(this.dataFile, 'utf-8')
+        const parsed: StoreData = JSON.parse(data)
+        
+        // Clear existing data
+        this.products.clear()
+        this.sales.clear()
+        
+        // Load products
+        Object.values(parsed.products || {}).forEach(product => {
+          this.products.set(product.id, product)
+        })
+        
+        // Load sales
+        Object.values(parsed.sales || {}).forEach(sale => {
+          this.sales.set(sale.id, sale)
+        })
+        
+        this.initialized = true
+        console.log(`✓ Loaded ${this.products.size} products and ${this.sales.size} sales from file`)
+      } else {
+        console.log('No data file found, will initialize with sample data on first request')
+      }
+    } catch (error) {
+      console.error('Error loading data from file:', error)
+    }
+  }
+
+  private saveToFile(): void {
+    try {
+      const data: StoreData = {
+        products: Object.fromEntries(this.products),
+        sales: Object.fromEntries(this.sales),
+      }
+      fs.writeFileSync(this.dataFile, JSON.stringify(data, null, 2), 'utf-8')
+    } catch (error) {
+      console.error('Error saving data to file:', error)
+    }
+  }
 
   // Product methods
   addProduct(product: Omit<Product, 'id'>): Product {
     const id = `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     const newProduct: Product = { ...product, id }
     this.products.set(id, newProduct)
+    this.saveToFile()
     return newProduct
   }
 
@@ -47,11 +104,14 @@ class DataStore {
     if (!product) return null
     const updated = { ...product, ...updates, id }
     this.products.set(id, updated)
+    this.saveToFile()
     return updated
   }
 
   deleteProduct(id: string): boolean {
-    return this.products.delete(id)
+    const result = this.products.delete(id)
+    if (result) this.saveToFile()
+    return result
   }
 
   // Sale methods
@@ -67,6 +127,7 @@ class DataStore {
       this.products.set(sale.productId, product)
     }
     
+    this.saveToFile()
     return newSale
   }
 
@@ -89,12 +150,20 @@ class DataStore {
       this.products.set(sale.productId, product)
     }
     
-    return this.sales.delete(id)
+    const result = this.sales.delete(id)
+    if (result) this.saveToFile()
+    return result
   }
 
   // Initialize with sample data
   initializeSampleData(): void {
-    if (this.products.size > 0) return
+    // Only initialize if we haven't loaded from file and have no products
+    if (this.initialized || this.products.size > 0) {
+      console.log('Skipping sample data initialization - data already exists')
+      return
+    }
+
+    console.log('Initializing with sample data...')
 
     const sampleProducts = [
       {
@@ -172,7 +241,16 @@ class DataStore {
     ]
 
     sampleSales.forEach(sale => this.addSale(sale))
+    this.initialized = true
+    console.log('✓ Sample data initialized')
   }
 }
 
-export const store = new DataStore()
+// Use global to persist store across hot reloads in development
+const globalForStore = global as unknown as { store: DataStore }
+
+export const store = globalForStore.store || new DataStore()
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForStore.store = store
+}

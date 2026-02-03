@@ -11,8 +11,8 @@ import ProductList from '@/components/product-list'
 import SalesList from '@/components/sales-list'
 import AnalyticsDashboard from '@/components/analytics-dashboard'
 import { useShopData, type Product, type Sale } from '@/hooks/use-shop-data'
-import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 export default function Home() {
   const { products, sales, loading, addProduct, updateProduct, deleteProduct, addSale, deleteSale } = useShopData()
@@ -72,93 +72,108 @@ export default function Home() {
   }
 
   const generatePDF = () => {
-    const doc = new jsPDF()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    let yPosition = 20
+    try {
+      const doc = new jsPDF()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      let yPosition = 20
 
-    doc.setFontSize(24)
-    doc.text('Shop Management Report', 15, yPosition)
-    yPosition += 15
+      // Title
+      doc.setFontSize(24)
+      doc.text('Shop Management Report', 15, yPosition)
+      yPosition += 15
 
-    doc.setFontSize(10)
-    doc.setTextColor(100)
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, yPosition)
-    yPosition += 10
-    doc.setTextColor(0)
+      // Date
+      doc.setFontSize(10)
+      doc.setTextColor(100)
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, yPosition)
+      yPosition += 10
+      doc.setTextColor(0)
 
-    const totalRevenue = sales.reduce((sum, s) => sum + (s.salePrice * s.quantity), 0)
-    const totalCost = products.reduce((sum, p) => sum + (p.cost * p.quantity), 0)
-    const totalProfit = sales.reduce((sum, s) => {
-      const product = products.find(p => p.id === s.productId)
-      return sum + ((s.salePrice - (product?.cost || 0)) * s.quantity)
-    }, 0)
+      // Calculate totals
+      const totalRevenue = sales.reduce((sum, s) => sum + (s.salePrice * s.quantity), 0)
+      const totalCost = products.reduce((sum, p) => sum + (p.cost * p.quantity), 0)
+      const totalProfit = sales.reduce((sum, s) => {
+        const product = products.find(p => p.id === s.productId)
+        return sum + ((s.salePrice - (product?.cost || 0)) * s.quantity)
+      }, 0)
 
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text('Financial Summary', 15, yPosition)
-    yPosition += 8
+      // Financial Summary
+      doc.setFontSize(12)
+      doc.setFont(undefined, 'bold')
+      doc.text('Financial Summary', 15, yPosition)
+      yPosition += 8
 
-    doc.setFont(undefined, 'normal')
-    doc.setFontSize(11)
-    doc.text(`Total Revenue: $${totalRevenue.toFixed(2)}`, 20, yPosition)
-    yPosition += 6
-    doc.text(`Total Cost: $${totalCost.toFixed(2)}`, 20, yPosition)
-    yPosition += 6
-    doc.text(`Total Profit: $${totalProfit.toFixed(2)}`, 20, yPosition)
-    yPosition += 10
+      doc.setFont(undefined, 'normal')
+      doc.setFontSize(11)
+      doc.text(`Total Revenue: $${totalRevenue.toFixed(2)}`, 20, yPosition)
+      yPosition += 6
+      doc.text(`Total Cost: $${totalCost.toFixed(2)}`, 20, yPosition)
+      yPosition += 6
+      doc.text(`Total Profit: $${totalProfit.toFixed(2)}`, 20, yPosition)
+      yPosition += 10
 
-    doc.setFont(undefined, 'bold')
-    doc.text('Product Inventory', 15, yPosition)
-    yPosition += 8
+      // Product Inventory
+      doc.setFont(undefined, 'bold')
+      doc.text('Product Inventory', 15, yPosition)
+      yPosition += 8
 
-    const productData = products.map(p => [
-      p.name,
-      p.sku,
-      p.quantity.toString(),
-      `$${p.cost.toFixed(2)}`,
-      `$${p.sellingPrice.toFixed(2)}`,
-      `$${(p.sellingPrice - p.cost).toFixed(2)}`
-    ])
+      const productData = products.map(p => [
+        p.name,
+        p.sku,
+        p.quantity.toString(),
+        `$${p.cost.toFixed(2)}`,
+        `$${p.sellingPrice.toFixed(2)}`,
+        `$${(p.sellingPrice - p.cost).toFixed(2)}`
+      ])
 
-    doc.autoTable({
-      head: [['Product', 'SKU', 'Qty', 'Cost', 'Price', 'Margin']],
-      body: productData,
-      startY: yPosition,
-      headStyles: { fillColor: [102, 51, 200], textColor: 255 },
-      alternateRowStyles: { fillColor: [245, 245, 245] }
-    })
+      autoTable(doc, {
+        head: [['Product', 'SKU', 'Qty', 'Cost', 'Price', 'Margin']],
+        body: productData,
+        startY: yPosition,
+        headStyles: { fillColor: [102, 51, 200] as [number, number, number], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 245, 245] as [number, number, number] },
+        theme: 'striped'
+      })
 
-    yPosition = (doc as any).lastAutoTable.finalY + 15
+      yPosition = (doc as any).lastAutoTable.finalY + 15
 
-    if (yPosition > pageHeight - 30) {
-      doc.addPage()
-      yPosition = 20
+      // Add new page if needed
+      if (yPosition > pageHeight - 30) {
+        doc.addPage()
+        yPosition = 20
+      }
+
+      // Recent Sales
+      doc.setFont(undefined, 'bold')
+      doc.text('Recent Sales', 15, yPosition)
+      yPosition += 8
+
+      const salesData = sales.slice(-10).map(s => {
+        const product = products.find(p => p.id === s.productId)
+        return [
+          product?.name || 'Unknown',
+          s.quantity.toString(),
+          `$${s.salePrice.toFixed(2)}`,
+          `$${(s.salePrice * s.quantity).toFixed(2)}`,
+          new Date(s.date).toLocaleDateString()
+        ]
+      })
+
+      autoTable(doc, {
+        head: [['Product', 'Qty', 'Price', 'Total', 'Date']],
+        body: salesData,
+        startY: yPosition,
+        headStyles: { fillColor: [102, 51, 200] as [number, number, number], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 245, 245] as [number, number, number] },
+        theme: 'striped'
+      })
+
+      // Save the PDF
+      doc.save('shop-report.pdf')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      alert('Failed to generate PDF report. Please check the console for details.')
     }
-
-    doc.setFont(undefined, 'bold')
-    doc.text('Recent Sales', 15, yPosition)
-    yPosition += 8
-
-    const salesData = sales.slice(-10).map(s => {
-      const product = products.find(p => p.id === s.productId)
-      return [
-        product?.name || 'Unknown',
-        s.quantity.toString(),
-        `$${s.salePrice.toFixed(2)}`,
-        `$${(s.salePrice * s.quantity).toFixed(2)}`,
-        new Date(s.date).toLocaleDateString()
-      ]
-    })
-
-    doc.autoTable({
-      head: [['Product', 'Qty', 'Price', 'Total', 'Date']],
-      body: salesData,
-      startY: yPosition,
-      headStyles: { fillColor: [102, 51, 200], textColor: 255 },
-      alternateRowStyles: { fillColor: [245, 245, 245] }
-    })
-
-    doc.save('shop-report.pdf')
   }
 
   if (loading) {

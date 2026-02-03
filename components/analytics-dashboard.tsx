@@ -128,6 +128,7 @@ export default function AnalyticsDashboard({
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
                   <YAxis stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
+                  <YAxis yAxisId="right" orientation="right" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
                   <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: 'none', borderRadius: '8px', color: '#fff' }} />
                   <Legend />
                   <Line

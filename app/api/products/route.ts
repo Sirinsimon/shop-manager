@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { store } from '@/app/api/store'
 
-// Initialize sample data on first request
-store.initializeSampleData()
+// Initialize sample data only if no data exists
+if (store.getProducts().length === 0) {
+  store.initializeSampleData()
+}
 
 export async function GET() {
   try {

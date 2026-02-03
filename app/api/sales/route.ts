@@ -28,8 +28,13 @@ export async function POST(request: NextRequest) {
     // Check if product exists
     const product = store.getProduct(body.productId)
     if (!product) {
+      // Debug: log available products
+      const allProducts = store.getProducts()
+      console.log('Product not found. Looking for:', body.productId)
+      console.log('Available products:', allProducts.map(p => ({ id: p.id, name: p.name })))
+      
       return NextResponse.json(
-        { success: false, error: 'Product not found' },
+        { success: false, error: `Product not found. ID: ${body.productId}` },
         { status: 404 }
       )
     }
@@ -37,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Check if sufficient quantity
     if (product.quantity < body.quantity) {
       return NextResponse.json(
-        { success: false, error: 'Insufficient quantity' },
+        { success: false, error: `Insufficient quantity. Available: ${product.quantity}, Requested: ${body.quantity}` },
         { status: 400 }
       )
     }
@@ -52,6 +57,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: sale }, { status: 201 })
   } catch (error) {
+    console.error('Error creating sale:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to create sale' },
       { status: 500 }
