@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { store } from '@/app/api/store'
 
+export const runtime = 'nodejs'
+
 // Initialize sample data only if no data exists
 if (store.getProducts().length === 0) {
   store.initializeSampleData()

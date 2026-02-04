@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Plus, TrendingUp, Package, Zap, DollarSign, Moon, Sun } from 'lucide-react'
+import { Moon, Sun, LogOut, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Dashboard from '@/components/dashboard'
@@ -10,10 +10,12 @@ import SalesForm from '@/components/sales-form'
 import ProductList from '@/components/product-list'
 import SalesList from '@/components/sales-list'
 import AnalyticsDashboard from '@/components/analytics-dashboard'
+import AuthGuard from '@/components/auth-guard'
 import { useShopData, type Product, type Sale } from '@/hooks/use-shop-data'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const { products, sales, loading, addProduct, updateProduct, deleteProduct, addSale, deleteSale } = useShopData()
@@ -24,11 +26,28 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [username, setUsername] = useState('')
+  const router = useRouter()
 
   // Avoid hydration mismatch
   useEffect(() => {
     setMounted(true)
+    const storedUsername = localStorage.getItem('shop_username')
+    if (storedUsername) {
+      setUsername(storedUsername)
+    }
   }, [])
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      localStorage.removeItem('shop_authenticated')
+      localStorage.removeItem('shop_username')
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   const handleAddProduct = async (product: Omit<Product, 'id'>) => {
     try {
@@ -204,58 +223,70 @@ export default function Home() {
   const totalUnits = sales.reduce((sum, s) => sum + s.quantity, 0)
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Shop Manager</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage inventory, track sales, and monitor profits</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {mounted && (
+    <AuthGuard>
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Smart Shop Manager</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {username ? `Welcome, ${username}` : 'Manage inventory, track sales, and monitor profits'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {mounted && username && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-secondary rounded-md">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-foreground">{username}</span>
+                </div>
+              )}
+              {mounted && (
+                <Button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  variant="outline"
+                  size="icon"
+                  className="bg-transparent"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="w-5 h-5" />
+                  ) : (
+                    <Moon className="w-5 h-5" />
+                  )}
+                </Button>
+              )}
               <Button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                onClick={generatePDF}
                 variant="outline"
-                size="icon"
                 className="bg-transparent"
               >
-                {theme === 'dark' ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
+                Generate Report
               </Button>
-            )}
-            <Button
-              onClick={generatePDF}
-              variant="outline"
-              className="gap-2 bg-transparent"
-            >
-              <Download className="w-4 h-4" />
-              Generate Report
-            </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="bg-transparent"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4 mb-8">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <Zap className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+            <TabsTrigger value="dashboard">
+              Dashboard
             </TabsTrigger>
-            <TabsTrigger value="products" className="gap-2">
-              <Package className="w-4 h-4" />
-              <span className="hidden sm:inline">Products</span>
+            <TabsTrigger value="products">
+              Products
             </TabsTrigger>
-            <TabsTrigger value="sales" className="gap-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Sales</span>
+            <TabsTrigger value="sales">
+              Sales
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2">
-              <DollarSign className="w-4 h-4" />
-              <span className="hidden sm:inline">Analytics</span>
+            <TabsTrigger value="analytics">
+              Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -289,9 +320,7 @@ export default function Home() {
                   setEditingProduct(null)
                   setShowProductForm(true)
                 }}
-                className="gap-2"
               >
-                <Plus className="w-4 h-4" />
                 Add Product
               </Button>
             </div>
@@ -339,9 +368,7 @@ export default function Home() {
               </div>
               <Button
                 onClick={() => setShowSalesForm(true)}
-                className="gap-2"
               >
-                <Plus className="w-4 h-4" />
                 Record Sale
               </Button>
             </div>
@@ -379,5 +406,6 @@ export default function Home() {
         </Tabs>
       </main>
     </div>
+    </AuthGuard>
   )
 }

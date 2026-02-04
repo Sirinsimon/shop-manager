@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X } from 'lucide-react'
 import type { Product, Sale } from '@/app/page'
 
 interface SalesFormProps {
@@ -71,8 +70,8 @@ export default function SalesForm({ products, onSave, onCancel }: SalesFormProps
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Record New Sale</span>
-          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground">
-            <X className="w-5 h-5" />
+          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground text-sm">
+            Close
           </button>
         </CardTitle>
       </CardHeader>

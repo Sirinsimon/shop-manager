@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { store } from '@/app/api/store'
 
+export const runtime = 'nodejs'
+
 export async function GET() {
   try {
     const sales = store.getSales()

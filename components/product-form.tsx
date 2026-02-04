@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X } from 'lucide-react'
 import type { Product } from '@/app/page'
 
 interface ProductFormProps {
@@ -52,8 +51,8 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{product ? 'Edit Product' : 'Add New Product'}</span>
-          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground">
-            <X className="w-5 h-5" />
+          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground text-sm">
+            Close
           </button>
         </CardTitle>
       </CardHeader>

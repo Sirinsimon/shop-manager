@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Trash2, Search, Calendar } from 'lucide-react'
 import type { Product, Sale } from '@/app/page'
 
 interface SalesListProps {
@@ -45,23 +44,21 @@ export default function SalesList({ sales, products, onDelete }: SalesListProps)
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="flex-1">
           <Input
             type="text"
             placeholder="Search by product or order ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+            className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
-        <div className="relative">
-          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <div>
           <Input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="pl-9 bg-secondary border-border text-foreground w-full sm:w-auto"
+            className="bg-secondary border-border text-foreground w-full sm:w-auto"
           />
         </div>
       </div>
@@ -135,9 +132,8 @@ export default function SalesList({ sales, products, onDelete }: SalesListProps)
                           onDelete(sale.id)
                         }
                       }}
-                      className="h-8 w-8 p-0"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      Delete
                     </Button>
                   </td>
                 </tr>

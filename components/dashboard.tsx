@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, TrendingDown, TrendingUp } from 'lucide-react'
 import type { Product, Sale } from '@/app/page'
 
 interface DashboardProps {
@@ -86,10 +85,10 @@ export default function Dashboard({
           </CardHeader>
           <CardContent className="space-y-3">
             <Button onClick={onAddProduct} variant="outline" className="w-full justify-start bg-transparent">
-              + Add New Product
+              Add New Product
             </Button>
             <Button onClick={onAddSale} variant="outline" className="w-full justify-start bg-transparent">
-              + Record Sale
+              Record Sale
             </Button>
           </CardContent>
         </Card>
@@ -97,8 +96,7 @@ export default function Dashboard({
         {/* Low Stock Alerts */}
         <Card className="bg-card border-border lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive" />
+            <CardTitle className="text-base">
               Low Stock Alerts
             </CardTitle>
             <CardDescription>
@@ -121,7 +119,7 @@ export default function Dashboard({
                         {product.quantity} in stock (min: {product.minStock})
                       </p>
                     </div>
-                    <TrendingDown className="w-4 h-4 text-destructive" />
+                    <span className="text-xs text-destructive font-medium">Low Stock</span>
                   </div>
                 ))}
               </div>
@@ -133,8 +131,7 @@ export default function Dashboard({
       {/* Top Selling Products */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-accent" />
+          <CardTitle className="text-base">
             Top Selling Products
           </CardTitle>
           <CardDescription>Based on sales volume</CardDescription>

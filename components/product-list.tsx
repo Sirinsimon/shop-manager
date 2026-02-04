@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Edit2, Trash2, Search, AlertTriangle } from 'lucide-react'
 import type { Product } from '@/app/page'
 
 interface ProductListProps {
@@ -41,14 +40,13 @@ export default function ProductList({ products, onEdit, onDelete }: ProductListP
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="flex-1">
           <Input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+            className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
         {categories.length > 0 && (
@@ -67,14 +65,11 @@ export default function ProductList({ products, onEdit, onDelete }: ProductListP
 
       {/* Low Stock Alert */}
       {lowStockCount > 0 && (
-        <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-          <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-medium text-foreground text-sm">
-              {lowStockCount} {lowStockCount === 1 ? 'product' : 'products'} below minimum stock
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Consider reordering soon</p>
-          </div>
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <p className="font-medium text-foreground text-sm">
+            {lowStockCount} {lowStockCount === 1 ? 'product' : 'products'} below minimum stock
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Consider reordering soon</p>
         </div>
       )}
 
@@ -131,9 +126,8 @@ export default function ProductList({ products, onEdit, onDelete }: ProductListP
                         size="sm"
                         variant="outline"
                         onClick={() => onEdit(product)}
-                        className="h-8 w-8 p-0"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        Edit
                       </Button>
                       <Button
                         size="sm"
@@ -143,9 +137,8 @@ export default function ProductList({ products, onEdit, onDelete }: ProductListP
                             onDelete(product.id)
                           }
                         }}
-                        className="h-8 w-8 p-0"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        Delete
                       </Button>
                     </div>
                   </td>

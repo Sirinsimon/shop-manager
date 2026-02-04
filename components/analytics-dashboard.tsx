@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import type { Product, Sale } from '@/app/page'
+import { useTheme } from 'next-themes'
 
 interface AnalyticsDashboardProps {
   products: Product[]
@@ -19,6 +20,16 @@ export default function AnalyticsDashboard({
   totalProfit,
   totalUnits
 }: AnalyticsDashboardProps) {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  
+  // Theme-aware colors
+  const axisColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+  const tooltipBg = isDark ? '#1a1a2e' : '#ffffff'
+  const tooltipTextColor = isDark ? '#fff' : '#000'
+  const tooltipBorder = isDark ? 'none' : '1px solid #e5e7eb'
+  
   // Daily sales trend
   const salesByDate = sales.reduce((acc, s) => {
     const date = new Date(s.date).toLocaleDateString()
@@ -125,11 +136,11 @@ export default function AnalyticsDashboard({
             {salesByDate.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={salesByDate}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
-                  <YAxis yAxisId="right" orientation="right" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
-                  <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                  <XAxis dataKey="date" stroke={axisColor} style={{ fontSize: '12px' }} />
+                  <YAxis stroke={axisColor} style={{ fontSize: '12px' }} />
+                  <YAxis yAxisId="right" orientation="right" stroke={axisColor} style={{ fontSize: '12px' }} />
+                  <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: tooltipBorder, borderRadius: '8px', color: tooltipTextColor }} />
                   <Legend />
                   <Line
                     type="monotone"
@@ -182,7 +193,7 @@ export default function AnalyticsDashboard({
                       <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `$${value.toFixed(2)}`} contentStyle={{ backgroundColor: '#1a1a2e', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                  <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} contentStyle={{ backgroundColor: tooltipBg, border: tooltipBorder, borderRadius: '8px', color: tooltipTextColor }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -204,10 +215,10 @@ export default function AnalyticsDashboard({
           {productProfits.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={productProfits}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} angle={-45} textAnchor="end" height={80} />
-                <YAxis stroke="rgba(255,255,255,0.5)" style={{ fontSize: '12px' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a2e', border: 'none', borderRadius: '8px', color: '#fff' }} formatter={(value) => `$${value.toFixed(2)}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                <XAxis dataKey="name" stroke={axisColor} style={{ fontSize: '12px' }} angle={-45} textAnchor="end" height={80} />
+                <YAxis stroke={axisColor} style={{ fontSize: '12px' }} />
+                <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: tooltipBorder, borderRadius: '8px', color: tooltipTextColor }} formatter={(value) => `$${Number(value).toFixed(2)}`} />
                 <Legend />
                 <Bar dataKey="profit" fill="#6633c8" name="Profit ($)" radius={[8, 8, 0, 0]} />
               </BarChart>
