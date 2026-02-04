@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Plus, TrendingUp, Package, Zap, DollarSign } from 'lucide-react'
+import { Download, Plus, TrendingUp, Package, Zap, DollarSign, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Dashboard from '@/components/dashboard'
@@ -13,6 +13,7 @@ import AnalyticsDashboard from '@/components/analytics-dashboard'
 import { useShopData, type Product, type Sale } from '@/hooks/use-shop-data'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { useTheme } from 'next-themes'
 
 export default function Home() {
   const { products, sales, loading, addProduct, updateProduct, deleteProduct, addSale, deleteSale } = useShopData()
@@ -21,6 +22,13 @@ export default function Home() {
   const [showSalesForm, setShowSalesForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleAddProduct = async (product: Omit<Product, 'id'>) => {
     try {
@@ -99,11 +107,11 @@ export default function Home() {
 
       // Financial Summary
       doc.setFontSize(12)
-      doc.setFont(undefined, 'bold')
+      doc.setFont('helvetica', 'bold')
       doc.text('Financial Summary', 15, yPosition)
       yPosition += 8
 
-      doc.setFont(undefined, 'normal')
+      doc.setFont('helvetica', 'normal')
       doc.setFontSize(11)
       doc.text(`Total Revenue: $${totalRevenue.toFixed(2)}`, 20, yPosition)
       yPosition += 6
@@ -113,7 +121,7 @@ export default function Home() {
       yPosition += 10
 
       // Product Inventory
-      doc.setFont(undefined, 'bold')
+      doc.setFont('helvetica', 'bold')
       doc.text('Product Inventory', 15, yPosition)
       yPosition += 8
 
@@ -144,7 +152,7 @@ export default function Home() {
       }
 
       // Recent Sales
-      doc.setFont(undefined, 'bold')
+      doc.setFont('helvetica', 'bold')
       doc.text('Recent Sales', 15, yPosition)
       yPosition += 8
 
@@ -203,14 +211,30 @@ export default function Home() {
             <h1 className="text-3xl font-bold text-foreground">Shop Manager</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage inventory, track sales, and monitor profits</p>
           </div>
-          <Button
-            onClick={generatePDF}
-            variant="outline"
-            className="gap-2 bg-transparent"
-          >
-            <Download className="w-4 h-4" />
-            Generate Report
-          </Button>
+          <div className="flex items-center gap-3">
+            {mounted && (
+              <Button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                variant="outline"
+                size="icon"
+                className="bg-transparent"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </Button>
+            )}
+            <Button
+              onClick={generatePDF}
+              variant="outline"
+              className="gap-2 bg-transparent"
+            >
+              <Download className="w-4 h-4" />
+              Generate Report
+            </Button>
+          </div>
         </div>
       </header>
 
